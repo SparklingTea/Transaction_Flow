@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>貔裘日志</title>
+    <style>
+        /* --- 样式部分保持一致，增加了月支出的样式 --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fdf6e3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            width: 360px;
+            background-color: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+            border: 4px solid #4a4a4a;
+        }
+
+        .header {
+            background-color: #ffeaa7;
+            height: 220px; /* 增加高度以容纳月支出显示 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            position: relative;
+            z-index: 2;
+            padding-bottom: 0px;
+        }
+
+        .pixiu-img {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: url('cutie.jpg') no-repeat center top; 
+            background-size: cover;
+            opacity: 0.8;
+            z-index: -1;
+        }
+
+        /* .pixiu-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;  
+            object-position: center center;
+            transform: translateY(0px) scale(1);
+            z-index: -1;        
+            opacity: 0.9;       
+        } */
+        
+        .title-text {
+            margin-bottom: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #5d4037;
+            background: rgba(255,255,255,0.9);
+            padding: 5px 15px;
+            border-radius: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* 新增：月总支出显示区 */
+        .monthly-total-box {
+            /* --- 新增/修改这两行 --- */
+            align-self: flex-end;  /* 核心：让自身靠左对齐 */
+            margin-left: 20px;       /* 核心：左边留出 20px 的距离 */
+            /* --------------------- */
+
+            background: #fff;
+            border: 3px solid #ff9a9e;
+            border-radius: 12px;
+            padding: 5px 20px;
+            margin-bottom: 25px; 
+            text-align: center; /* 这里的 center 是指文字在框框里居中，保持不动即可 */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        .monthly-label {
+            font-size: 12px;
+            color: #888;
+        }
+        .monthly-amount {
+            font-size: 28px;
+            font-weight: bold;
+            color: #d63031;
+        }
+
+        .rainbow-paper {
+            background: linear-gradient(180deg, #ff9a9e 0%, #fecfef 33%, #a18cd1 66%, #84fab0 100%);
+            padding: 40px 20px 60px 20px;
+            min-height: 300px;
+            position: relative;
+            margin-top: -20px;
+            z-index: 1;
+            box-shadow: inset 0 5px 10px rgba(0,0,0,0.1);
+        }
+
+        .rainbow-paper::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            background: radial-gradient(circle, transparent 70%, #fff 75%) 0 0;
+            background-size: 20px 20px;
+            transform: rotate(180deg);
+        }
+
+        .row-item {
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 15px;
+            margin-bottom: 25px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            backdrop-filter: blur(2px);
+        }
+
+        .label {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4a4a4a;
+            width: 50px;
+            text-align: center;
+        }
+
+        .budget-display {
+            flex-grow: 1;
+            text-align: center;
+            background: rgba(255,255,255,0.8);
+            border: 2px dashed #bbb;
+            border-radius: 10px;
+            margin: 0 10px;
+            padding: 5px;
+        }
+
+        .budget-input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
+            color: #333;
+            outline: none;
+        }
+        
+        .budget-label-small {
+            font-size: 10px;
+            color: #666;
+            display: block;
+        }
+
+        .btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+        }
+
+        .btn:active { transform: translateY(4px); box-shadow: none; }
+        .btn-minus { background-color: #ff6b6b; }
+        .btn-plus { background-color: #51cf66; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="pixiu-img"></div> <div class="title-text">貔裘日志</div>
+        <!-- <video class="pixiu-video" autoplay muted loop playsinline>
+            <source src="cute.mp4" type="video/mp4">
+        </video> -->
+    </div>
+
+    <div class="rainbow-paper">
+        <div class="row-item">
+            <button class="btn btn-minus" onclick="modifyBudget('food', -1)">-</button>
+            <div class="label">餐饮</div>
+            <div class="budget-display">
+                <span class="budget-label-small">余额</span>
+                <input type="number" id="food" class="budget-input" value="0" onchange="manualInput('food')">
+            </div>
+            <button class="btn btn-plus" onclick="modifyBudget('food', 1)">+</button>
+        </div>
+
+        <div class="row-item">
+            <button class="btn btn-minus" onclick="modifyBudget('shopping', -1)">-</button>
+            <div class="label">消费</div>
+            <div class="budget-display">
+                <span class="budget-label-small">余额</span>
+                <input type="number" id="shopping" class="budget-input" value="0" onchange="manualInput('shopping')">
+            </div>
+            <button class="btn btn-plus" onclick="modifyBudget('shopping', 1)">+</button>
+        </div>
+
+        <div class="row-item">
+            <button class="btn btn-minus" onclick="modifyBudget('transport', -1)">-</button>
+            <div class="label">交通</div>
+            <div class="budget-display">
+                <span class="budget-label-small">余额</span>
+                <input type="number" id="transport" class="budget-input" value="0" onchange="manualInput('transport')">
+            </div>
+            <button class="btn btn-plus" onclick="modifyBudget('transport', 1)">+</button>
+        </div>
+
+        <div class="monthly-total-box">
+            <div class="monthly-label">本月累计超额支出</div>
+            <div class="monthly-amount" id="monthlyTotalDisplay">0</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 定义数据结构 key
+    const STORAGE_KEY = 'rainbow_ledger_data';
+
+    // 默认数据
+    let appData = {
+        food: 0,
+        shopping: 0,
+        transport: 0,
+        monthlyTotal: 0,
+        lastWeekCheck: '', // 记录上次执行“周一结算”的日期
+        lastMonthCheck: '' // 记录上次执行“月度重置”的日期
+    };
+
+    // --- 1. 初始化与时间检查逻辑 ---
+    window.onload = function() {
+        loadData();
+        checkTimeRules();
+        updateUI();
+    };
+
+    function loadData() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            appData = JSON.parse(saved);
+        }
+    }
+
+    function saveData() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        updateUI();
+    }
+
+    function checkTimeRules() {
+        const today = new Date();
+        const dateString = today.toDateString(); // 例如 "Mon Nov 25 2024"
+        const currentDay = today.getDay();       // 今天是周几 (0-6)
+        const currentDate = today.getDate();     // 今天是几号 (1-31)
+
+        // --- 🔥 核心修改：计算本月14号是星期几 ---
+        // new Date(年, 月, 日) -> 获取本月14号的时间对象
+        const targetDateObj = new Date(today.getFullYear(), today.getMonth(), 14);
+        const targetDayOfWeek = targetDateObj.getDay(); // 算出14号对应的星期数 (0-6)
+        
+        // 为了提示语更人性化，我们把数字转成中文
+        const weekDaysCN = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+        const targetDayName = weekDaysCN[targetDayOfWeek]; 
+        // ----------------------------------------
+
+        let dataChanged = false;
+
+        // --- 规则 A: 每月14号归零月支出 (保持不变) ---
+        if (currentDate === 14 && appData.lastMonthCheck !== dateString) {
+            alert("📅 新的账单月（14号）开始了！月支出已重置为 0。");
+            appData.monthlyTotal = 0;
+            appData.lastMonthCheck = dateString;
+            dataChanged = true;
+        }
+
+        // --- 规则 B: 动态周结算 ---
+        // 逻辑修改：如果 "今天是那一天" (currentDay === targetDayOfWeek)
+        if (currentDay === targetDayOfWeek && appData.lastWeekCheck !== dateString) {
+            
+            const sum = appData.food + appData.shopping + appData.transport;
+            
+            // 如果你想保留“剩余金额存入月支出”的逻辑：
+            if (sum > 0) {
+                appData.monthlyTotal += sum;
+            }
+
+            // --- 重置预算为 100/100/50 ---
+            appData.food = 100;
+            appData.shopping = 100;
+            appData.transport = 50;
+
+            // 提示语会自动告诉你是周几
+            alert(`🐲 本月14号是${targetDayName}，所以今天是结算日！\n剩余预算已存入，新的一周预算已恢复 (100/100/50)。`);
+
+            appData.lastWeekCheck = dateString;
+            dataChanged = true;
+        }
+
+        if (dataChanged) {
+            saveData();
+            updateUI(); // 别忘了刷新界面显示
+        }
+    }
+
+    // --- 2. 界面交互逻辑 ---
+
+    function updateUI() {
+        document.getElementById('food').value = appData.food;
+        document.getElementById('shopping').value = appData.shopping;
+        document.getElementById('transport').value = appData.transport;
+        document.getElementById('monthlyTotalDisplay').innerText = appData.monthlyTotal;
+    }
+
+    // 处理加减号点击
+    function modifyBudget(category, direction) {
+        let actionText = direction === 1 ? "存入/增加" : "消费/减少";
+        let amountStr = prompt(`请输入${actionText}的金额:`, "");
+
+        if (amountStr !== null && amountStr.trim() !== "") {
+            let amount = parseFloat(amountStr);
+            if (isNaN(amount) || amount < 0) {
+                alert("请输入有效的数字！");
+                return;
+            }
+
+            if (direction === 1) {
+                appData[category] += amount;
+            } else {
+                appData[category] -= amount;
+            }
+            
+            // 格式化一下防止太多小数位
+            appData[category] = parseFloat(appData[category].toFixed(2));
+            saveData();
+        }
+    }
+
+    // 处理手动在输入框打字修改
+    function manualInput(category) {
+        const inputEl = document.getElementById(category);
+        let val = parseFloat(inputEl.value);
+        if (isNaN(val)) val = 0;
+        
+        appData[category] = val;
+        saveData();
+    }
+    
+    // 调试辅助（你可以删除）：临时测试时间功能
+    // 在控制台输入 testMonday() 可以模拟周一结算
+    // window.testMonday = function() {
+    //     appData.lastWeekCheck = ""; // 清除记录
+    //     // 强制把今天当成周一的逻辑需要改Date对象，这里我们直接调用逻辑部分模拟
+    //     const sum = appData.food + appData.shopping + appData.transport;
+    //     appData.monthlyTotal += sum;
+    //     appData.food = 0; appData.shopping = 0; appData.transport = 0;
+    //     alert("（测试模式）模拟周一结算完成");
+    //     updateUI();
+    // }
+
+</script>
+
+</body>
+</html>
